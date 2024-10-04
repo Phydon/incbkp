@@ -24,7 +24,13 @@ def read_file(path: Path) -> bytes:
 #     mode3 = "fullcontent"
 
 
+def verify_fullcontent(content1: str, content2: str) -> bool:
+    return True if content1 == content2 else False
+
+
 def metadata(path: Path) -> str:
+    # TODO which metadata should be compared?
+    # TODO filename, modification time, creation time, access time, etc.?
     # use lstat => don't follow symbolic links
     return path.lstat()
 
@@ -63,11 +69,17 @@ def verify_files(path1: Path, path2: Path) -> bool:
 def test() -> None:
     content1 = read_file(TESTPATH1)
     print(content1)
-    hash = create_hash(content1)
-    print(hash)
-
     content2 = read_file(TESTPATH2)
     print(content2)
+
+    print("=" * 20)
+
+    print(verify_fullcontent(content1, content2))
+
+    print("=" * 20)
+
+    hash = create_hash(content1)
+    print(hash)
     hash = create_hash(content2)
     print(hash)
 
