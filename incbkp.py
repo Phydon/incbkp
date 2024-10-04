@@ -16,6 +16,13 @@ def read_file(path: str) -> bytes:
     return content
 
 
+# def comparision_mode() -> str:
+#     # TODO
+#     mode1 = "metadata"
+#     mode2 = "filehash"
+#     mode3 = "fullcontent"
+
+
 def create_hash(content: bytes | str) -> str:
     # FIXME hashes differ to reading bytes via read_file function
     # if isinstance(content, str):
@@ -25,7 +32,7 @@ def create_hash(content: bytes | str) -> str:
     # Workaround for ERROR above
     assert isinstance(content, bytes), "File content not converted to bytes properly"
 
-    return blake3(content).hexdigest()
+    return blake3(content, max_threads=blake3.AUTO).hexdigest()
 
 
 def verify_hash(hash1: str, hash2: str) -> bool:
