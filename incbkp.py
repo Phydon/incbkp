@@ -1,9 +1,12 @@
+import os
 from blake3 import blake3
 from pathlib import Path
 
 
 TESTPATH1: str = "test1.txt"
 TESTPATH2: str = "test2.txt"
+TESTDIR1: str = "testdiroriginal"
+TESTDIR2: str = "testdirbackup"
 
 
 def main() -> None:
@@ -66,8 +69,8 @@ def verify_hash(hash1: str, hash2: str) -> bool:
 
 
 def verify_file_hashes(path1: Path, path2: Path) -> bool:
-    content1 = read_file(TESTPATH1)
-    content2 = read_file(TESTPATH2)
+    content1 = read_file(path1)
+    content2 = read_file(path2)
     hash1 = create_hash(content1)
     hash2 = create_hash(content2)
 
@@ -81,18 +84,30 @@ def compare_files(file1: Path, file2: Path) -> bool:
     # if they are the same -> return true
     # if not, return false
     # (optionally compare file content directly)
-
+    
+    print(f"Comparing files:\n  {file1}\n  {file2}")
+    
     if verify_metadata(file1, file2):
-        print(f"Checking metadata of:\n\t{file1}\n\t{file2}")
         return True
     elif verify_file_hashes(file1, file2):
-        print(f"Checking hashes of:\n\t{file1}\n\t{file2}")
         return True
     # elif full_mode:
     #     # optional if full_mode flag is set
     #     return True if verify_fullcontent(read_file(file1), read_file(file2)) else False
     else:
         return False
+
+
+def walkdir(directory: Path) -> (list[str], list[str]):
+    dirlist= []
+    filelist = []
+    for root, dirs, files in directory.walk(on_error=print):
+        for dir in dirs: 
+            dirlist.append(os.path.join(root, dir))
+        for file in files:
+            filelist.append(os.path.join(root, file))
+
+    return (dirlist, filelist)
 
 
 def test() -> None:
@@ -128,10 +143,33 @@ def test() -> None:
     print(verify_metadata(TESTPATH1, TESTPATH2))
 
     print("=" * 20)
+    
+    print(compare_files(TESTPATH1, TESTPATH2))
+    
+    print("=" * 20)
 
 
 def test2():
-    compare_files(TESTPATH1, TESTPATH2)
+    dirs1, files1 = walkdir(Path(TESTDIR1))
+    print(dirs1)
+    print(files1)
+    
+    print("=" * 20)
+    
+    dirs2, files2 = walkdir(Path(TESTDIR2))
+    print(dirs2)
+    print(files2)
+    
+    print("=" * 20)
+
+    print("Processing ...")
+
+    for file1, file2 in zip(files1, files2):
+        # TODO FIXME what if new file detected in one directory?
+        if compare_files(file1, file2):
+            print("=> Nothing changed")
+        else:
+            print("=> Files changed -> backup needed")
 
 
 if __name__ == "__main__":
