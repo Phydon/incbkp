@@ -1,6 +1,7 @@
 import os
 from blake3 import blake3
-from pathlib import Path
+from icecream import ic
+from pathlib import Path, PurePath
 
 
 TESTPATH1: str = "test1.txt"
@@ -10,7 +11,13 @@ TESTDIR2: str = "testdirbackup"
 
 
 def main() -> None:
-    pass
+    # get structure of original directory
+    (odires, ofiles) = walkdir(TESTDIR1)
+
+    # get structure of backup directory
+    (bdires, bfiles) = walkdir(TESTDIR2)
+
+    # compare both structures
 
 
 def read_file(path: Path) -> bytes:
@@ -84,9 +91,9 @@ def compare_files(file1: Path, file2: Path) -> bool:
     # if they are the same -> return true
     # if not, return false
     # (optionally compare file content directly)
-    
+
     print(f"Comparing files:\n  {file1}\n  {file2}")
-    
+
     if verify_metadata(file1, file2):
         return True
     elif verify_file_hashes(file1, file2):
@@ -98,11 +105,11 @@ def compare_files(file1: Path, file2: Path) -> bool:
         return False
 
 
-def walkdir(directory: Path) -> (list[str], list[str]):
-    dirlist= []
+def walkdir(directory: str) -> (list[str], list[str]):
+    dirlist = []
     filelist = []
-    for root, dirs, files in directory.walk(on_error=print):
-        for dir in dirs: 
+    for root, dirs, files in Path(directory).walk(on_error=print):
+        for dir in dirs:
             dirlist.append(os.path.join(root, dir))
         for file in files:
             filelist.append(os.path.join(root, file))
@@ -110,59 +117,85 @@ def walkdir(directory: Path) -> (list[str], list[str]):
     return (dirlist, filelist)
 
 
+def strip_root_from_file(file: str) -> str:
+    path = [c for c in PurePath(file).parts[1:]]
+
+    # if only filename is given return filename
+    if len(path) < 1:
+        return file
+
+    fullpath = PurePath("")
+    for c in path:
+        fullpath = fullpath.joinpath(c)
+
+    return fullpath
+
+
+def find_corresponding_counterpart(file: Path, dirs: list[str]) -> bool:
+    # find corresponding counterpart (filename) in other directory and return the whole path to that file in the other directory
+    file = strip_root_from_file(file)
+    for f in dirs:
+        f = strip_root_from_file(f)
+
+        if file.match(Path(f)):
+            return True
+
+    return False
+
+
 def test() -> None:
     content1 = read_file(TESTPATH1)
-    print(content1)
+    ic(content1)
     content2 = read_file(TESTPATH2)
-    print(content2)
+    ic(content2)
 
     print("=" * 20)
 
-    print(verify_fullcontent(content1, content2))
+    ic(verify_fullcontent(content1, content2))
 
     print("=" * 20)
 
     hash = create_hash(content1)
-    print(hash)
+    ic(hash)
     hash = create_hash(content2)
-    print(hash)
+    ic(hash)
 
     print("=" * 20)
 
-    print(verify_file_hashes(TESTPATH1, TESTPATH2))
+    ic(verify_file_hashes(TESTPATH1, TESTPATH2))
 
     print("=" * 20)
 
     meta1 = metadata(Path(TESTPATH1))
     meta2 = metadata(Path(TESTPATH2))
-    print(meta1)
-    print(meta2)
+    ic(meta1)
+    ic(meta2)
 
     print("=" * 20)
 
-    print(verify_metadata(TESTPATH1, TESTPATH2))
+    ic(verify_metadata(TESTPATH1, TESTPATH2))
 
     print("=" * 20)
-    
-    print(compare_files(TESTPATH1, TESTPATH2))
-    
+
+    ic(compare_files(TESTPATH1, TESTPATH2))
+
     print("=" * 20)
 
 
 def test2():
-    dirs1, files1 = walkdir(Path(TESTDIR1))
-    print(dirs1)
-    print(files1)
-    
-    print("=" * 20)
-    
-    dirs2, files2 = walkdir(Path(TESTDIR2))
-    print(dirs2)
-    print(files2)
-    
+    dirs1, files1 = walkdir(TESTDIR1)
+    ic(dirs1)
+    ic(files1)
+
     print("=" * 20)
 
-    print("Processing ...")
+    dirs2, files2 = walkdir(TESTDIR2)
+    ic(dirs2)
+    ic(files2)
+
+    print("=" * 20)
+
+    ic("Processing ...")
 
     for file1, file2 in zip(files1, files2):
         # TODO FIXME what if new file detected in one directory?
@@ -172,7 +205,25 @@ def test2():
             print("=> Files changed -> backup needed")
 
 
+def test3() -> None:
+    print("=" * 20)
+    dirs1, files1 = walkdir(TESTDIR1)
+    dirs2, files2 = walkdir(TESTDIR2)
+    print("=" * 20)
+    # ic(find_corresponding_counterpart(Path("new.txt"), files1))
+    # print("=" * 20)
+    # ic(find_corresponding_counterpart(Path(TESTPATH1), files1))
+    # print("=" * 20)
+
+    for file in files1:
+        if not find_corresponding_counterpart(file, files2):
+            print(f"Do backup: {file}")
+        else:
+            print("compare file hashes -> check if data has changed")
+
+
 if __name__ == "__main__":
     # main()
-    test()
-    test2()
+    # test()
+    # test2()
+    test3()
