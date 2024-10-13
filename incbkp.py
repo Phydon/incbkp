@@ -55,7 +55,7 @@ def metadata(path: Path) -> list[str]:
 
 
 def verify_metadata(path1: str, path2: str) -> bool:
-    # INFO returns False if 2 files have the same content but where last modified at different times
+    # HINT returns False if 2 files have the same content but where last modified at different times
     return True if metadata(Path(path1)) == metadata(Path(path2)) else False
 
 
@@ -71,7 +71,7 @@ def create_hash(content: bytes) -> str:
 
 
 def verify_hash(hash1: str, hash2: str) -> bool:
-    # INFO returns True if content is the same, even when files where last modified at different times
+    # HINT returns True if content is the same, even when files where last modified at different times
     return True if hash1 == hash2 else False
 
 
