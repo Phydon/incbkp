@@ -143,6 +143,12 @@ def find_corresponding_counterpart(file: Path, dirs: list[str]) -> bool:
     return False
 
 
+def store_path_and_hash(path: Path, hash: str):
+    # TODO store the filepath and the corresponding hash of the filecontent in a separate file
+    # To check whether a file has change or not, calculate the hash for the filecontent and compare to stored hash
+    return
+
+
 def test() -> None:
     content1 = read_file(TESTPATH1)
     ic(content1)
